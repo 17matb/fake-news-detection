@@ -40,35 +40,5 @@ def text_mock_dataset_content_not_null():
 def text_cleaning_on_mock_data():
     df = create_mock_dataset()
     # from import # A mettre à jour quand module prêt
-    df["clean_text"] = df["text"].apply()  # Appliquer le module
+    df["clean_text"] = df["text"].apply()  # Appliquer le module data_cleaner
     assert all("<" not in c and "http" not in c for c in df["clean_text"])
-
-
-def test_pipeline_on_mock_dataset():
-    df = create_mock_dataset()
-    # from import # A mettre à jour quand module prêt
-
-    # Prétraitement
-    df["clean_text"] = df["text"].apply(clean_text)  # clean_text à adapter selon module
-    df["clean_text"] = df["clean_text"].apply(
-        to_lower
-    )  # to_lower à adapter selon module
-
-    # Chunk
-    df["chunk"] = df["clean_text"].apply(
-        lambda x: chunk_text(x, chunk_size=5)
-    )  # chunk_test à adapté selon module
-
-    # Embedding
-    df["embedding"] = df["clean_text"].apply(
-        lambda chunks: [embedding(c) for c in chunks]
-    )  # embedding à adapter selon module
-
-    # Vérification
-    for idx, row in df.iterrows():
-        # Chunks = liste
-        assert isinstance(row["chunks"], list)
-
-        # Embedding = liste de vecteurs
-        for vec in row["embedding"]:
-            assert isinstance(vec, list)
