@@ -1,0 +1,44 @@
+import pandas as pd
+import pytest
+
+
+def create_mock_dataset():
+    data = {
+        "title": ["Title 1", "Title 2", "Title 3"],
+        "text": [
+            "Fake News : Aliens landind on Earth !",
+            "Donald Trump is a first super genius !",
+            "Alibaba and the 40 thiefs !",
+        ],
+        "label": ["False", "False", "True"],
+    }
+
+    df = pd.DataFrame(data)
+    return df
+
+
+def test_mock_dataset_structure():
+    df = create_mock_dataset()
+
+    # Vérifie si c'est un DF
+    assert isinstance(df, pd.DataFrame)
+    # Vérifie les colonnes
+    assert set(df.columns) == {"title", "text", "label"}
+    # Vérifie le nombre de lignes
+    assert len(df) == 3
+
+
+def text_mock_dataset_content_not_null():
+    df = create_mock_dataset()
+    # Vérifie que toutes les colonnes existent
+    for col in ["title", "text", "label"]:
+        assert col in df.columns
+    # Vérifie que les labels sont valides
+    assert all(l in ["True", "Fake"] for l in df["label"] if l != "")
+
+
+def text_cleaning_on_mock_data():
+    df = create_mock_dataset()
+    # from import # A mettre à jour quand module prêt
+    df["clean_text"] = df["text"].apply()  # Appliquer le module data_cleaner
+    assert all("<" not in c and "http" not in c for c in df["clean_text"])
