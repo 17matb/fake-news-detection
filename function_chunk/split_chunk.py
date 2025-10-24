@@ -2,7 +2,7 @@
 
 
 
-def chunk_from_text(texte: str, start: int = None, step: int = None, overlap: int = None):
+def chunk_text(texte: str, start: int = None, step: int = None, overlap: int = None):
     """
     Prend une chaîne de texte, la découpe en liste de mots, puis la divise en sous-listes (chunks).
 
@@ -12,9 +12,9 @@ def chunk_from_text(texte: str, start: int = None, step: int = None, overlap: in
         La chaîne de caractères à traiter (ex. un paragraphe de texte).
     start : int or None, optional
         L'indice de départ dans la liste de mots. Si None, démarrage à 0.
-    step : int, required
+    step : int, optional
         Le nombre de mots à avancer pour commencer chaque nouveau chunk.
-    overlap : int, required
+    overlap : int, optional
         Nombre de mots à inclure dans chaque chunk.
 
     Retour
@@ -46,5 +46,5 @@ def chunk_from_text(texte: str, start: int = None, step: int = None, overlap: in
 
 # Exemple d’utilisation
 texte = "In pandas, “slicing” generally means selecting subsets of rows and/or columns from a DataFrame or Series. There are a few different ways to slice data, depending on whether you want to use labels, integer positions, or more advanced indexing. Here’s a guide + examples."
-chunked_text = chunk_from_text(texte, start=0, step=3, overlap=5)
+chunked_text = chunk_text(texte, start=0, step=3, overlap=5)
 print(chunked_text)
