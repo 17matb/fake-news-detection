@@ -1,7 +1,3 @@
-
-
-
-
 def chunk_text(texte: str, start: int = None, step: int = None, overlap: int = None):
     """
     Prend une chaîne de texte, la découpe en liste de mots, puis la divise en sous-listes (chunks).
