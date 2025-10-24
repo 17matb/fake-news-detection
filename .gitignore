@@ -1,4 +1,4 @@
 data/
-notebooks/
-# fichiers cache
+
+# Fichiers cache
 *.pyc
