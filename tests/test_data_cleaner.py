@@ -1,5 +1,7 @@
+from unittest.mock import patch
+
 import pandas as pd
-import pytest
+from data_handler.data_handler import DataHandler
 
 
 def create_mock_dataset():
@@ -34,11 +36,14 @@ def text_mock_dataset_content_not_null():
     for col in ["title", "text", "label"]:
         assert col in df.columns
     # Vérifie que les labels sont valides
-    assert all(l in ["True", "Fake"] for l in df["label"] if l != "")
+    assert all(label in ["True", "Fake"] for label in df["label"] if label != "")
 
 
 def text_cleaning_on_mock_data():
     df = create_mock_dataset()
-    # from import # A mettre à jour quand module prêt
-    df["clean_text"] = df["text"].apply()  # Appliquer le module data_cleaner
-    assert all("<" not in c and "http" not in c for c in df["clean_text"])
+
+    with patch("pandas.read_csv", return_value=df):
+        handler = DataHandler(csv_path="test.csv")
+        handler.load().clean()
+
+    assert all("<" not in c and "http" not in c for c in handler.clean_df["text"])
