@@ -1,4 +1,3 @@
-from html import unescape
 from typing import final
 
 import pandas as pd
@@ -37,54 +36,27 @@ class DataHandler:
         print("\n-> CLEANING DATA")
         self.clean_df: pd.DataFrame = self.df.copy()
 
-        self.clean_df["title"] = self.clean_df["title"].astype(str)
-        self.clean_df["text"] = self.clean_df["text"].astype(str)
-        print("· CONVERTED `title` AND `text` COLUMNS TO STRING TYPE")
-
         self.clean_df = self.clean_df.drop_duplicates("text")
         print(
             f"· DROPPED {self.df['text'].duplicated().sum()} DUPLICATES FOR `text` COLUMN"
         )
 
-        self.clean_df["title"] = self.clean_df["title"].apply(lambda x: unescape(x))
-        self.clean_df["text"] = self.clean_df["text"].apply(lambda x: unescape(x))
+        for column in ["title", "text"]:
+            self.clean_df[column] = (
+                self.clean_df[column]
+                .apply(CleaningUtils.unescape_text)
+                .apply(CleaningUtils.remove_html_tags)
+                .apply(CleaningUtils.remove_starts_ends_brackets)
+                .apply(CleaningUtils.remove_urls)
+                .apply(CleaningUtils.normalize_spaces)
+                .apply(CleaningUtils.remove_special_characters)
+            )
         print("· DECODED HTML ENTITIES BACK TO THEIR ORIGINAL CHARACTERS")
-
-        self.clean_df["title"] = self.clean_df["title"].apply(
-            CleaningUtils.remove_html_tags
-        )
-        self.clean_df["text"] = self.clean_df["text"].apply(
-            CleaningUtils.remove_html_tags
-        )
         print("· REMOVED HTML TAGS IN `title` AND `text` COLUMNS")
-
-        self.clean_df["title"] = self.clean_df["title"].apply(
-            CleaningUtils.remove_starts_ends_brackets
-        )
-        self.clean_df["text"] = self.clean_df["text"].apply(
-            CleaningUtils.remove_starts_ends_brackets
-        )
         print("· REMOVED OTHER UNWANTED FORMATTING TAGS IN `title` AND `text` COLUMNS")
-
-        self.clean_df["title"] = self.clean_df["title"].apply(CleaningUtils.remove_urls)
-        self.clean_df["text"] = self.clean_df["text"].apply(CleaningUtils.remove_urls)
         print("· REMOVED URLS IN `title` AND `text` COLUMNS")
-
-        self.clean_df["title"] = self.clean_df["title"].apply(
-            CleaningUtils.normalize_spaces
-        )
-        self.clean_df["text"] = self.clean_df["text"].apply(
-            CleaningUtils.normalize_spaces
-        )
         print("· NORMALIZED WHITE SPACES IN `title` AND `text` COLUMNS")
-
-        self.clean_df["title"] = self.clean_df["title"].apply(
-            CleaningUtils.remove_special_characters
-        )
-        self.clean_df["text"] = self.clean_df["text"].apply(
-            CleaningUtils.remove_special_characters
-        )
-        print("· REMOVED SPECIAL CHARACTERS IN `title` AND `text` COLUMNS")
+        print("· REMOVED SPECIAL CARACTERS IN `title` AND `text` COLUMNS")
 
         self.clean_df["date"] = pd.to_datetime(
             self.clean_df["date"], errors="coerce", format="mixed"
@@ -96,8 +68,8 @@ class DataHandler:
         self.clean_df["subject"] = self.clean_df["subject"].str.lower()
         print("· SET EVERY STRING TO LOWERCASE")
 
-        self.clean_df = self.clean_df[self.clean_df["title"].str.strip().astype(bool)]
-        self.clean_df = self.clean_df[self.clean_df["text"].str.strip().astype(bool)]
+        self.clean_df = self.clean_df[self.clean_df["title"].str.strip().astype(bool)]  # pyright: ignore[reportAttributeAccessIssue]
+        self.clean_df = self.clean_df[self.clean_df["text"].str.strip().astype(bool)]  # pyright: ignore[reportAttributeAccessIssue]
         print("· DELETED ENTRIES WITH EMPTY `title` OR `text` VALUES")
 
         print(f"· CLEAN DATAFRAME PREVIEW:\n{self.clean_df}")
