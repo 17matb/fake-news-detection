@@ -6,12 +6,12 @@ from chroma_query import query_collection
 
 
 class ChromaManager:
-    def __init__(self, embed_function, collection_name):
+    def __init__(self, collection_name):
         self.client = ChromaClient()
-        self.collection = self.client.get_or_create_collection(
-            name=collection_name, embedding_function=embed_function
-        )
         self.embed_function = self.client.embedding_function()
+        self.collection = self.client.get_or_create_collection(
+            name=collection_name, embedding_function=self.embed_function
+        )
 
     def add_dataframe_to_collection(
         self,
