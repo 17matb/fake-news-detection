@@ -14,5 +14,5 @@ class SingletonMeta(type):
         with cls._lock:
             if cls not in cls._instances:
                 instance = super().__call__(*args, **kwargs)
-                cls._instances = instance
+                cls._instances[cls] = instance
         return cls._instances[cls]
