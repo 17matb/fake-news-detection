@@ -11,13 +11,13 @@ class DataHandler:
         self.csv_path = csv_path
 
     def load(self):
-        print(f"-> LOADING CSV DATA FROM `{self.csv_path}` INTO A DATAFRAME")
+        print(f"· LOADING CSV DATA FROM `{self.csv_path}` INTO A DATAFRAME")
         self.df: pd.DataFrame = pd.read_csv(self.csv_path)
         print(f"· DATAFRAME PREVIEW:\n{self.df}")
         return self
 
     def explore(self):
-        print("\n-> EXPLORING DATA")
+        print("· EXPLORING DATA")
         if self.df is None:
             raise ValueError("× Dataframe not found")
         exploration_info = {
@@ -33,7 +33,7 @@ class DataHandler:
         return self
 
     def clean(self):
-        print("\n-> CLEANING DATA")
+        print("· CLEANING DATA")
         self.clean_df: pd.DataFrame = self.df.copy()
 
         self.clean_df = self.clean_df.drop_duplicates("text")
