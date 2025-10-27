@@ -24,8 +24,7 @@ def test_chunk_basic(sample_text):
         ["ten","eleven","twelve"],
     ]
     assert result == expected
-import pytest
-from function_chunk.split_chunk import chunk_text
+
 
 @pytest.fixture
 def sample_text():
