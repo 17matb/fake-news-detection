@@ -37,7 +37,11 @@ class ChromaManager:
 
         ids, documents, metadatas, embeddings = [], [], [], []
         for idx, row in df.iterrows():
-            chunks = chunk_text(row["text"], step=step, overlap=overlap)
+            chunks = chunk_text(
+                row["text"],  # pyright: ignore[reportArgumentType]
+                step=step,
+                overlap=overlap,
+            )
 
             for i, chunk in enumerate(chunks):
                 ids.append(f"{prefix}_{idx}_{i}")
