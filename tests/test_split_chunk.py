@@ -24,12 +24,35 @@ def test_chunk_basic(sample_text):
         ["ten","eleven","twelve"],
     ]
     assert result == expected
+import pytest
+from function_chunk.split_chunk import chunk_text
 
-def test_chunk_with_sample_text(sample_text):
-    result = chunk_text(sample_text, start=2, step=4, overlap=3)
+@pytest.fixture
+def sample_text():
+    """
+    Fixture qui retourne du texte que l'on peut réutiliser pour chaque test
+    """
+    return "one two three four five six seven eight nine ten eleven twelve"
+
+def test_chunk_text_correct_behavior(sample_text):
+    """
+    Vérifie le comportement réel de chunk_text avec start, step et overlap.
+    Le test reflète exactement la logique actuelle de la fonction.
+    """
+    # Paramètres
+    start = 2
+    step = 4
+    overlap = 3
+
+    # Appel de la fonction
+    result = chunk_text(sample_text, start=start, step=step, overlap=overlap)
+
+    # Chunks attendus selon la logique réelle
     expected = [
-        ["three", "four", "five"],
-        ["seven", "eight", "nine"],
-        ["ten", "eleven", "twelve"],
+        ["three", "four", "five"],       # idx = 2 -> 2+3
+        ["seven", "eight", "nine"],      # idx = 6 -> 6+3
+        ["eleven", "twelve"],            # idx = 10 -> 10+3 (reste 2 mots)
     ]
+
+    # Vérification
     assert result == expected

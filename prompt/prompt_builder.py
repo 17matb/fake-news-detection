@@ -1,4 +1,5 @@
 import ollama
+# from chroma_client import get_embedding_function
 
 class PromptBuilder():
 
@@ -14,7 +15,7 @@ class PromptBuilder():
         self.data = None
 
     def generate_embedding(self):
-        # Générer l'embedding du texte à vérifier
+        # Génére l'embedding du texte à vérifier
         emb_response = ollama.embed(
             model=self.model_embedding,
             input=self.article_text
@@ -23,13 +24,15 @@ class PromptBuilder():
 
         return embedding 
     
-    def retrieve_similar_articles(self):
+    def build_context_for_prompt(self, search_results):
         # Rechercher les articles les plus similaires dans la base vectorielle
-        search_results = collection.query(
-            query_embeddings=embedding,
-            n_results=3,
-            include=["documents", "metadatas", "distances"]
-        )
+        # Prend le retour de la fonction query_collection qui a était vectorisé au préalable
+
+        # search_results = self.collection.query(
+        #     query_embeddings=embedding,
+        #     n_results=3,
+        #     include=["documents", "metadatas", "distances"]
+        # )
 
         # Récupérer les documents les plus proches
         similar_docs = search_results["documents"][0]
@@ -40,36 +43,40 @@ class PromptBuilder():
             f"- Sujet : {meta['subject']}\n  Date : {meta['date']}\n  Label : {meta['label']}\n  Texte : {doc[:500]}..."
             for doc, meta in zip(similar_docs, similar_meta)
         ])
-
+        return context
+    
+    def build_prompt(self, context):
         # Construire le prompt complet pour le LLM
         prompt = f"""
-        Tu es un expert en détection de fake news. 
-        Tu disposes d'une base de connaissances contenant des articles déjà vérifiés, avec leurs métadonnées :
-        - subject : sujet principal
-        - date : date de publication
-        - label : "True" ou "Fake"
-        - texte : contenu de l’article.
+                You are an expert in detecting fake news. 
+                You have a knowledge base containing articles that have already been verified, with their metadata:
+                - subject: main topic
+                - date: publication date
+                - label: “True” or “Fake”
+                - text: content of the article.
 
-        Voici quelques articles similaires issus de ta base :
-        {context}
+                Here are some similar articles from your database:
+                {context}
 
-        Ta tâche est d'analyser le nouvel article suivant et de déterminer s'il est "True" ou "Fake".
+                Your task is to analyze the following new article and determine whether it is “True” or “Fake.”
 
-        Nouvel article à analyser :
+                New article to analyze:
         ---
-        {article_text}
+        {self.article_text}
         ---
 
-        Réponds uniquement avec :
-        Label : "True" ou "Fake"
-        Justification : en 2 phrases maximum, basée sur les similarités ou le ton de l’article.
+        Respond only with:
+        Label: "True" or "Fake"
+        Justification: in 2 sentences maximum, based on the similarities or tone of the article.
         """
-
-        # Appeler le modèle de langage pour obtenir la classification
+        return prompt
+    
+    def predict_label(self, prompt):
+        # Appele le modèle de langage pour obtenir la classification
         response = ollama.generate(
-            model="llama3",
+            model=self.model_llm,
             prompt=prompt
         )
 
-        # Retourner la réponse
+        # Retourne la réponse
         return response["response"]
