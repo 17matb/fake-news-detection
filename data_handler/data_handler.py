@@ -2,7 +2,7 @@ from typing import final
 
 import pandas as pd
 
-from data_handler.cleaning_utils import CleaningUtils
+from data_handler.text_cleaning import text_cleaning
 
 
 @final
@@ -41,32 +41,19 @@ class DataHandler:
             f"· DROPPED {self.df['text'].duplicated().sum()} DUPLICATES FOR `text` COLUMN"
         )
 
-        for column in ["title", "text"]:
-            self.clean_df[column] = (
-                self.clean_df[column]
-                .apply(CleaningUtils.unescape_text)
-                .apply(CleaningUtils.remove_html_tags)
-                .apply(CleaningUtils.remove_starts_ends_brackets)
-                .apply(CleaningUtils.remove_urls)
-                .apply(CleaningUtils.normalize_spaces)
-                .apply(CleaningUtils.remove_special_characters)
-            )
+        for column in ["title", "text", "subject"]:
+            self.clean_df[column] = self.clean_df[column].apply(text_cleaning)
         print("· DECODED HTML ENTITIES BACK TO THEIR ORIGINAL CHARACTERS")
-        print("· REMOVED HTML TAGS IN `title` AND `text` COLUMNS")
-        print("· REMOVED OTHER UNWANTED FORMATTING TAGS IN `title` AND `text` COLUMNS")
-        print("· REMOVED URLS IN `title` AND `text` COLUMNS")
-        print("· NORMALIZED WHITE SPACES IN `title` AND `text` COLUMNS")
-        print("· REMOVED SPECIAL CARACTERS IN `title` AND `text` COLUMNS")
+        print("· REMOVED HTML TAGS")
+        print("· REMOVED OTHER UNWANTED FORMATTING TAGS")
+        print("· REMOVED URLS")
+        print("· NORMALIZED WHITE SPACES")
+        print("· REMOVED SPECIAL CARACTERS")
 
         self.clean_df["date"] = pd.to_datetime(
             self.clean_df["date"], errors="coerce", format="mixed"
         )
         print("· CONVERTED `date` COLUMN TO DATETIME FORMAT")
-
-        self.clean_df["title"] = self.clean_df["title"].str.lower()
-        self.clean_df["text"] = self.clean_df["text"].str.lower()
-        self.clean_df["subject"] = self.clean_df["subject"].str.lower()
-        print("· SET EVERY STRING TO LOWERCASE")
 
         self.clean_df = self.clean_df[self.clean_df["title"].str.strip().astype(bool)]  # pyright: ignore[reportAttributeAccessIssue]
         self.clean_df = self.clean_df[self.clean_df["text"].str.strip().astype(bool)]  # pyright: ignore[reportAttributeAccessIssue]
