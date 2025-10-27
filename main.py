@@ -1,9 +1,10 @@
 from argparse import ArgumentParser
 
-from data_handler.data_handler import DataHandler
+from pipelines.pipeline import Pipeline
 
 
 def main():
+    pipeline = Pipeline()
     parser = ArgumentParser(prog="fake-news-detection")
     parser.add_argument(
         "-e",
@@ -18,7 +19,7 @@ def main():
         )
 
     if arguments.explore:
-        DataHandler(csv_path="./data/Fake.csv").load().explore()
+        pipeline.data_exploration()
 
 
 if __name__ == "__main__":
