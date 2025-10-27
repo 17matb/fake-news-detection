@@ -16,33 +16,33 @@ class DataHandler:
         print(f"· DATAFRAME PREVIEW:\n{self.df}")
         return self
 
-    def explore(self):
+    @staticmethod
+    def explore(df):
         print("· EXPLORING DATA")
-        if self.df is None:
+        if df is None:
             raise ValueError("× Dataframe not found")
         exploration_info = {
-            "shape": self.df.shape,
-            "columns": self.df.columns.tolist(),
-            "dtypes": self.df.dtypes.to_dict(),
-            "missing": self.df.isna().sum().to_dict(),
+            "shape": df.shape,
+            "columns": df.columns.tolist(),
+            "dtypes": df.dtypes.to_dict(),
+            "missing": df.isna().sum().to_dict(),
         }
         print(f"· SHAPE: {exploration_info['shape']}")
         print(f"· COLUMNS: {exploration_info['columns']}")
         print(f"· DTYPES: {exploration_info['dtypes']}")
         print(f"· MISSING: {exploration_info['missing']}")
-        return self
+        return df
 
-    def clean(self):
+    @staticmethod
+    def clean(df):
         print("· CLEANING DATA")
-        self.clean_df: pd.DataFrame = self.df.copy()
+        clean_df: pd.DataFrame = df.copy()
 
-        self.clean_df = self.clean_df.drop_duplicates("text")
-        print(
-            f"· DROPPED {self.df['text'].duplicated().sum()} DUPLICATES FOR `text` COLUMN"
-        )
+        clean_df = clean_df.drop_duplicates("text")
+        print(f"· DROPPED {df['text'].duplicated().sum()} DUPLICATES FOR `text` COLUMN")
 
         for column in ["title", "text", "subject"]:
-            self.clean_df[column] = self.clean_df[column].apply(text_cleaning)
+            clean_df[column] = clean_df[column].apply(text_cleaning)
         print("· DECODED HTML ENTITIES BACK TO THEIR ORIGINAL CHARACTERS")
         print("· REMOVED HTML TAGS")
         print("· REMOVED OTHER UNWANTED FORMATTING TAGS")
@@ -50,14 +50,17 @@ class DataHandler:
         print("· NORMALIZED WHITE SPACES")
         print("· REMOVED SPECIAL CARACTERS")
 
-        self.clean_df["date"] = pd.to_datetime(
-            self.clean_df["date"], errors="coerce", format="mixed"
+        clean_df["date"] = pd.to_datetime(
+            clean_df["date"], errors="coerce", format="mixed"
         )
         print("· CONVERTED `date` COLUMN TO DATETIME FORMAT")
 
-        self.clean_df = self.clean_df[self.clean_df["title"].str.strip().astype(bool)]  # pyright: ignore[reportAttributeAccessIssue]
-        self.clean_df = self.clean_df[self.clean_df["text"].str.strip().astype(bool)]  # pyright: ignore[reportAttributeAccessIssue]
+        clean_df = clean_df[clean_df["title"].str.strip().astype(bool)]  # pyright: ignore[reportAssignmentType]
+        clean_df = clean_df[clean_df["text"].str.strip().astype(bool)]  # pyright: ignore[reportAssignmentType]
         print("· DELETED ENTRIES WITH EMPTY `title` OR `text` VALUES")
 
-        print(f"· CLEAN DATAFRAME PREVIEW:\n{self.clean_df}")
-        return self
+        clean_df = clean_df.reset_index(drop=True)
+        print("· RESET INDEX")
+
+        print(f"· CLEAN DATAFRAME PREVIEW:\n{clean_df}")
+        return clean_df
