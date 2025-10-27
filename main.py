@@ -21,6 +21,5 @@ def main():
     if arguments.explore:
         pipeline.data_exploration()
 
-
 if __name__ == "__main__":
     main()
