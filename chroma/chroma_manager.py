@@ -1,5 +1,5 @@
 import pandas as pd
-from chromadb import Collection
+import numpy as np
 from function_chunk.split_chunk import chunk_text
 from chroma_client import ChromaClient
 from chroma_query import query_collection
@@ -8,14 +8,24 @@ from chroma_query import query_collection
 class ChromaManager:
     def __init__(self, collection_name):
         self.client = ChromaClient()
-        self.embed_function = self.client.embedding_function()
+        self.embed_function = self.client.get_embedding_function()
         self.collection = self.client.get_or_create_collection(
             name=collection_name, embedding_function=self.embed_function
         )
 
+    @staticmethod
+    def normalize_L2(vector):
+        """
+        Normalise un vecteur pour qu'il ait une norme L2 égale à 1.
+        """
+        norm = np.linalg.norm(vector)
+        if norm == 0:
+            return vector
+        return vector / norm
+
     def add_dataframe_to_collection(
         self,
-        df: pd.Dataframe,
+        df: pd.DataFrame,
         prefix: str,
         step: int = 50,
         overlap: int = 10,
@@ -47,7 +57,8 @@ class ChromaManager:
                 )
 
                 # Embedding du chunk
-                embeddings.append(self.embed_function([chunk])[0])
+                raw_emb = self.embed_function([chunk])[0]
+                embeddings.append(self.normalize_L2(raw_emb))
 
                 if len(documents) >= batch_size:
                     self.collection.add(
@@ -56,7 +67,7 @@ class ChromaManager:
                         metadatas=metadatas,
                         embeddings=embeddings,
                     )
-                ids, documents, metadatas, embeddings = [], [], [], []
+                    ids, documents, metadatas, embeddings = [], [], [], []
 
         # Dernier batch
         if len(documents) > 0:
