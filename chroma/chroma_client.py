@@ -1,6 +1,7 @@
 import chromadb
 from chromadb.utils import embedding_functions
-from singleton import SingletonMeta
+
+from chroma.singleton import SingletonMeta
 
 
 class ChromaClient(metaclass=SingletonMeta):
@@ -9,7 +10,7 @@ class ChromaClient(metaclass=SingletonMeta):
     """
 
     def __init__(
-        self, db_path: str = "./chroma_db", model_name: str = "all-minilm:latest"
+        self, db_path: str = "./chroma_db/", model_name: str = "all-minilm:latest"
     ):
         self.client = chromadb.PersistentClient(path=db_path)
         self.embedding_function = embedding_functions.OllamaEmbeddingFunction(
@@ -33,5 +34,5 @@ class ChromaClient(metaclass=SingletonMeta):
         Récupère ou crée une collection persistente avec embeddings.
         """
         return self.client.get_or_create_collection(
-            name=name, embedding_function=self.embedding_function
+            name=name
         )

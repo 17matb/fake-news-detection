@@ -1,17 +1,16 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 from function_chunk.split_chunk import chunk_text
-from chroma_client import ChromaClient
-from chroma_query import query_collection
+
+from chroma.chroma_client import ChromaClient
+from chroma.chroma_query import query_collection
 
 
 class ChromaManager:
     def __init__(self, collection_name):
         self.client = ChromaClient()
         self.embed_function = self.client.get_embedding_function()
-        self.collection = self.client.get_or_create_collection(
-            name=collection_name, embedding_function=self.embed_function
-        )
+        self.collection = self.client.get_or_create_collection(name=collection_name)
 
     @staticmethod
     def normalize_L2(vector):
@@ -29,46 +28,60 @@ class ChromaManager:
         prefix: str,
         step: int = 50,
         overlap: int = 10,
-        batch_size: int = 20,
+        batch_size: int = 500,
     ):
         """
         Ajoute un DataFrame complet dans la collection Chroma avec chunks + embeddings.
         """
 
-        ids, documents, metadatas, embeddings = [], [], [], []
-        for idx, row in df.iterrows():
-            chunks = chunk_text(row["text"], step=step, overlap=overlap)
+        ids, documents, metadatas = [], [], []
+        total_rows = len(df)
+        rows_handled = 0
+        print(f"· {rows_handled}/{total_rows} rows have been handled")
+        for row in df.itertuples():
+            chunks = chunk_text(
+                getattr(row, "text"),
+                step=step,
+                overlap=overlap,
+            )
 
             for i, chunk in enumerate(chunks):
-                ids.append(f"{prefix}_{idx}_{i}")
+                ids.append(f"{prefix}_{getattr(row, 'Index')}_{i}")
                 documents.append(chunk)
                 metadatas.append(
                     {
-                        "title": row.get("title"),
-                        "subject": row.get("subject"),
-                        "date": str(row.get("date")),
-                        "label": row.get("label"),
+                        "title": str(getattr(row, "title")),
+                        "subject": str(getattr(row, "subject")),
+                        "date": str(getattr(row, "date")),
+                        "label": str(getattr(row, "label")),
                         "chunk_index": i,
                     }
                 )
 
-                # Embedding du chunk
-                raw_emb = self.embed_function([chunk])[0]
-                embeddings.append(self.normalize_L2(raw_emb))
-
                 if len(documents) >= batch_size:
+                    raw_emb = self.embed_function(documents)
+                    normalized_emb = [
+                        self.normalize_L2(np.array(emb)) for emb in raw_emb
+                    ]
                     self.collection.add(
                         ids=ids,
                         documents=documents,
                         metadatas=metadatas,
-                        embeddings=embeddings,
+                        embeddings=normalized_emb,
                     )
-                    ids, documents, metadatas, embeddings = [], [], [], []
-
+                    ids, documents, metadatas = [], [], []
+            rows_handled += 1
+            if rows_handled % batch_size == 0:
+                print(f"· {rows_handled}/{total_rows} rows have been handled")
         # Dernier batch
         if len(documents) > 0:
+            raw_emb = self.embed_function(documents)
+            normalized_emb = [self.normalize_L2(np.array(emb)) for emb in raw_emb]
             self.collection.add(
-                ids=ids, documents=documents, metadatas=metadatas, embeddings=embeddings
+                ids=ids,
+                documents=documents,
+                metadatas=metadatas,
+                embeddings=normalized_emb,
             )
 
     def query(self, text, n_results):
