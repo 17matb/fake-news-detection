@@ -1,6 +1,7 @@
 import pandas as pd
 from chroma.chroma_manager import ChromaManager
 from data_handler.data_handler import DataHandler
+from data_handler.text_cleaning import text_cleaning
 
 
 class Pipeline:
@@ -55,7 +56,7 @@ class Pipeline:
         self.df = DataHandler.explore(self.df)
         return self
 
-    def data_cleaning(self, user_input: str | None = None):
+    def data_cleaning(self):
         """
         Loops in handlers dict to call their `clean()` method.
 
@@ -65,15 +66,12 @@ class Pipeline:
         Returns:
             self
         """
-        if user_input:
-            print(user_input)
-        else:
-            if not self._is_loaded:
-                print("× DATA NEEDS TO BE LOADED, LOADING DATA...")
-                self.data_loading()
-            print("\n-> DATA CLEANING STARTING...")
-            self.df = DataHandler.clean(self.df)
-            self._is_clean = True
+        if not self._is_loaded:
+            print("× DATA NEEDS TO BE LOADED, LOADING DATA...")
+            self.data_loading()
+        print("\n-> DATA CLEANING STARTING...")
+        self.df = DataHandler.clean(self.df)
+        self._is_clean = True
         return self
 
     def chroma_insertion(self):
@@ -92,3 +90,9 @@ class Pipeline:
         chroma = ChromaManager("news")
         print("\n-> PROCESSING DATA AND INSERTING IT INTO CHROMADB")
         chroma.add_dataframe_to_collection(self.df, "news")
+
+    def process_user_input(self):
+        user_input: str = input("Please provide the body of a news article: ")
+        print(user_input)
+        clean_user_input = text_cleaning(user_input)
+        print(clean_user_input)
