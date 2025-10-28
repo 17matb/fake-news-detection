@@ -39,7 +39,7 @@ class PromptBuilder():
 
         # Construire le contexte à donner au LLM
         context = "\n\n".join([
-            f"- Sujet : {meta['subject']}\n  Date : {meta['date']}\n  Label : {meta['label']}\n  Texte : {doc['text']}..."
+            f"- Sujet : {meta['subject']}\n  Date : {meta['date']}\n  Label : {meta['label']}\n  Texte : {doc}..."
             for doc, meta in zip(similar_docs, similar_meta)
         ])
         return context
