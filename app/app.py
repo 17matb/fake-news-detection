@@ -1,17 +1,31 @@
+# app/app.py
+import sys
+from pathlib import Path
 import streamlit as st
 
-# --- CONFIG PAGE ---
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+
+from prompt.rag_system import RAGSystem
+
+# Config page
 st.set_page_config(
     page_title="Fake News Checker",
     page_icon="📰",
     layout="centered",
 )
 
-# --- INIT SESSION ---
+# Init Session
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- STYLE CSS POUR GARDER LE CHAT INPUT EN BAS ---
+if "rag_system" not in st.session_state:
+    with st.spinner("Chargement du RAG..."):
+        st.session_state.rag_system = RAGSystem()
+
+# Style.css
 st.markdown(
     """
     <style>
@@ -41,7 +55,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- TITRE ---
+
 st.title("Fake News Checker")
 st.divider()
 st.markdown(
@@ -50,12 +64,12 @@ st.markdown(
     """
 )
 
-# --- AFFICHAGE DES MESSAGES ---
+# Affichage des messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# --- CHAMP DE SAISIE (en bas, fixé par le CSS) ---
+# Chat
 user_input = st.chat_input("Écrivez ici votre news...")
 
 if user_input:
@@ -68,10 +82,10 @@ if user_input:
     with st.chat_message("assistant"):
         with st.spinner("Vérification de la véracité de la news..."):
             try:
-                fake_or_not = "Cette news semble fiable."  # à remplacer par ton modèle
-                st.markdown(fake_or_not)
+                result = st.session_state.rag_system.analyze_article(user_input)
+                st.markdown(result)
                 st.session_state.messages.append(
-                    {"role": "assistant", "content": fake_or_not}
+                    {"role": "assistant", "content": result}
                 )
             except Exception as e:
                 error_msg = f"Erreur pendant l'analyse : {e}"

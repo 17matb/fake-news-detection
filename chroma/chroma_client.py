@@ -33,6 +33,5 @@ class ChromaClient(metaclass=SingletonMeta):
         Récupère ou crée une collection persistente avec embeddings.
         """
         return self.client.get_or_create_collection(
-            name=name,
-            embedding_function=self.embedding_function,  # pyright: ignore[reportArgumentType]
+            name=name
         )
