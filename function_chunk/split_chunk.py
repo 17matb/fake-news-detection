@@ -21,14 +21,16 @@ def chunk_text(texte: str, start: int = None, step: int = None, overlap: int = N
     """
     # Convertir la chaîne en liste de mots (split sur les espaces)
     splited_text = texte.split()
-    
+
     # Initialisation du paramètre start
     if start is None:
         start = 0
-    
+
     # Validations
     if not isinstance(splited_text, list):
-        raise TypeError("Erreur inattendue : la variable splited_text n'est pas une liste")
+        raise TypeError(
+            "Erreur inattendue : la variable splited_text n'est pas une liste"
+        )
 
     # Liste pour stocker les chunks
     chunks = []
@@ -36,11 +38,7 @@ def chunk_text(texte: str, start: int = None, step: int = None, overlap: int = N
     # Boucle de découpage
     for idx in range(start, len(splited_text), step):
         chunk_slice = splited_text[idx : idx + overlap]
-        chunks.append(chunk_slice)
+        chunk_str = " ".join(chunk_slice)
+        chunks.append(chunk_str)
 
     return chunks
-
-# Exemple d’utilisation
-texte = "In pandas, “slicing” generally means selecting subsets of rows and/or columns from a DataFrame or Series. There are a few different ways to slice data, depending on whether you want to use labels, integer positions, or more advanced indexing. Here’s a guide + examples."
-chunked_text = chunk_text(texte, start=0, step=3, overlap=5)
-print(chunked_text)
