@@ -10,8 +10,7 @@ class ChromaManager:
         self.client = ChromaClient()
         self.embed_function = self.client.get_embedding_function()
         self.collection = self.client.get_or_create_collection(
-            name=collection_name, embedding_function=self.embed_function
-        )
+            name=collection_name)
 
     @staticmethod
     def normalize_L2(vector):
