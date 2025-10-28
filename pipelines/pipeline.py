@@ -2,6 +2,7 @@ import pandas as pd
 from chroma.chroma_manager import ChromaManager
 from data_handler.data_handler import DataHandler
 from data_handler.text_cleaning import text_cleaning
+from prompt.rag_system import RAGSystem
 
 
 class Pipeline:
@@ -90,9 +91,13 @@ class Pipeline:
         chroma = ChromaManager("news")
         print("\n-> PROCESSING DATA AND INSERTING IT INTO CHROMADB")
         chroma.add_dataframe_to_collection(self.df, "news")
+        return self
 
     def process_user_input(self):
         user_input: str = input("Please provide the body of a news article: ")
         print(user_input)
         clean_user_input = text_cleaning(user_input)
         print(clean_user_input)
+        response = RAGSystem().analyze_article(clean_user_input)
+        print(response)
+        return self
