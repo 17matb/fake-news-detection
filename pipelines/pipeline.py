@@ -1,4 +1,5 @@
 import pandas as pd
+from chroma.chroma_manager import ChromaManager
 from data_handler.data_handler import DataHandler
 
 
@@ -22,10 +23,15 @@ class Pipeline:
         Returns:
             self
         """
+        fake_df = self.handlers["fake_news_csv"].load().df
+        true_df = self.handlers["true_news_csv"].load().df
+        fake_df["label"] = "fake"
+        true_df["label"] = "true"
+
         self.df = pd.concat(
             [
-                self.handlers["fake_news_csv"].load().df,
-                self.handlers["true_news_csv"].load().df,
+                fake_df,
+                true_df,
             ],
             ignore_index=True,
         )
@@ -70,12 +76,19 @@ class Pipeline:
             self._is_clean = True
         return self
 
-    def chroma_preparation(self):
-        """
-        chunk, embedding, normalization
-        """
-
     def chroma_insertion(self):
         """
-        insertion
+        Creates chunks, embeds and normalizes them, then inserts into chromaDB
+
+        Parameters:
+            self
+
+        Returns:
+            self
         """
+        if not self._is_clean:
+            print("× DATA NEEDS TO BE CLEAN, CLEANING DATA...")
+            self.data_cleaning()
+        chroma = ChromaManager("news")
+        print("\n-> PROCESSING DATA AND INSERTING IT INTO CHROMADB")
+        chroma.add_dataframe_to_collection(self.df, "news")
