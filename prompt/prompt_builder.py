@@ -20,19 +20,19 @@ class PromptBuilder():
             model=self.model_embedding,
             input=self.article_text
         )
-        embedding = emb_response["embeddings"]
+        self.data = emb_response["embeddings"]
 
-        return embedding 
+        return self.data 
     
     def build_context_for_prompt(self, search_results):
         # Rechercher les articles les plus similaires dans la base vectorielle
         # Prend le retour de la fonction query_collection qui a était vectorisé au préalable
-
-        # search_results = self.collection.query(
-        #     query_embeddings=embedding,
-        #     n_results=3,
-        #     include=["documents", "metadatas", "distances"]
-        # )
+        
+        search_results = self.collection.query(
+            query_embeddings=self.data,
+            n_results=3,
+            include=["documents", "metadatas", "distances"]
+        )
 
         # Récupérer les documents les plus proches
         similar_docs = search_results["documents"][0]
