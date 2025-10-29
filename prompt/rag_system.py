@@ -1,5 +1,6 @@
-from .prompt_builder import PromptBuilder
 from chroma.chroma_manager import ChromaManager
+
+from .prompt_builder import PromptBuilder
 
 
 class RAGSystem:
@@ -9,7 +10,7 @@ class RAGSystem:
 
         self.model_embedding = "all-minilm:latest"
         self.model_llm = model_lm
-        
+
     def analyze_article(self, article_text):
         try:
             # Recherche des articles similaires
@@ -30,10 +31,8 @@ class RAGSystem:
 
             # Prédiction
             response = prompt_builder.predict_label(prompt)
-            
+
             return response
-        
+
         except Exception as e:
             return f"Erreur lors de l'analyse: {e}"
-
-
