@@ -1,10 +1,11 @@
+import re
+from collections import Counter
+
+import pandas as pd
 from chroma.chroma_manager import ChromaManager
 
 from .prompt_builder import PromptBuilder
 
-import pandas as pd
-import re
-from collections import Counter
 
 class RAGSystem:
     def __init__(self, collection_name="news", model_lm="phi3:3.8b"):
@@ -39,50 +40,58 @@ class RAGSystem:
 
         except Exception as e:
             return f"Erreur lors de l'analyse: {e}"
-    
+
     def evaluation_rag(self, response):
         # search_results est le retour de self.chroma_manager.query(article_text, n_results=3) / def analyse_aticle
+        if not self.search_results:
+            raise Exception("× `self.search_results` est introuvable")
         retrieved_chunks = []
 
         for doc, meta, dist in zip(
-            self.search_results['documents'][0],
-            self.search_results['metadatas'][0],
-            self.search_results['distances'][0]
+            self.search_results["documents"][0],
+            self.search_results["metadatas"][0],
+            self.search_results["distances"][0],
         ):
-            retrieved_chunks.append({
-                "text": doc,
-                "subject": meta['subject'],
-                "date": meta['date'],
-                "label": meta['label'],   # vrai label
-                "distance": dist
-            })
+            retrieved_chunks.append(
+                {
+                    "text": doc,
+                    "subject": meta["subject"],
+                    "date": meta["date"],
+                    "label": meta["label"],  # vrai label
+                    "distance": dist,
+                }
+            )
 
         # Convertir en DataFrame pour plus de clarté
         df_chunks = pd.DataFrame(retrieved_chunks)
         pass
-                
+
         # Réponse du LLM
-        llm_text = response["response"]
+        llm_text = response
 
         # Extraire le Label entre les ```plaintext``` ou après "Label :"
         match = re.search(r"Label\s*:\s*(True|Fake)", llm_text, re.IGNORECASE)
         if match:
-            predicted_label = match.group(1) # group(1) renvoie juste la partie du groupe capturant ("True").
+            predicted_label = match.group(
+                1
+            )  # group(1) renvoie juste la partie du groupe capturant ("True").
         else:
             predicted_label = None
 
         # Labels réels des chunks récupérés
         true_labels = df_chunks["label"].tolist()
 
-
-        # Prend la majorité des labels 
+        # Prend la majorité des labels
         # Counter est une classe du module standard Python collections
-        majority_label = Counter(true_labels).most_common(1)[0][0] # Counter sert à compter les occurrences de chaque élément dans une liste.
-                                                                   # most_common extrait le premier élément du tuple,
-        
-        
+        majority_label = Counter(true_labels).most_common(1)[0][
+            0
+        ]  # Counter sert à compter les occurrences de chaque élément dans une liste.
+        # most_common extrait le premier élément du tuple,
+
         # Comparaison du label prédit avec les labels des chunks
-        matches = sum(1 for label in true_labels if label.lower() == predicted_label.lower())
+        matches = sum(
+            1 for label in true_labels if label.lower() == predicted_label.lower()
+        )
         percentage = (matches / len(true_labels)) * 100
 
         # -------------------- A supprimer apres test fonction --------------------------
@@ -92,7 +101,7 @@ class RAGSystem:
         # print(f"Predicted label: {predicted_label}")
         # print(f"Labels des chunks: {true_labels}")
         # print(f"Correspondances: {matches}/{len(true_labels)} ({percentage:.2f}%)")
-    
+
         # # Affichage des comparaisons
         # print(f"Predicted label: {predicted_label}")
         # print(f"Majority label of retrieved chunks: {majority_label}")
