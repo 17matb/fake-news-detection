@@ -15,7 +15,7 @@ class RAGSystem:
     def analyze_article(self, article_text):
         try:
             # Recherche des articles similaires
-            search_results = self.chroma_manager.query(article_text, n_results=3)
+            self.search_results = self.chroma_manager.query(article_text, n_results=3)
 
             # Construction du prompt
             prompt_builder = PromptBuilder(
@@ -25,7 +25,7 @@ class RAGSystem:
             )
 
             # Construction du contexte
-            context = prompt_builder.build_context_for_prompt(search_results)
+            context = prompt_builder.build_context_for_prompt(self.search_results)
 
             # Construction du prompt final
             prompt = prompt_builder.build_prompt(context)
@@ -38,14 +38,14 @@ class RAGSystem:
         except Exception as e:
             return f"Erreur lors de l'analyse: {e}"
     
-    def evaluation_rag(self, search_results, response):
+    def evaluation_rag(self, response):
         # search_results est le retour de self.chroma_manager.query(article_text, n_results=3) / def analyse_aticle
         retrieved_chunks = []
 
         for doc, meta, dist in zip(
-            search_results['documents'][0],
-            search_results['metadatas'][0],
-            search_results['distances'][0]
+            self.search_results['documents'][0],
+            self.search_results['metadatas'][0],
+            self.search_results['distances'][0]
         ):
             retrieved_chunks.append({
                 "text": doc,
