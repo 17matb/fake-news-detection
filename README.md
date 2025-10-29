@@ -174,6 +174,7 @@ Toute réutilisation ou diffusion du code nécessite l’accord préalable de l�
 - Matthis - Nabil - Loïc : Développement principal
 
 **Supervision**
+
 - Nadège - Maxime
 
 ## Dépannage
