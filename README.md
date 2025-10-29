@@ -22,10 +22,10 @@ Ce projet implémente un système alimenté par l'IA qui analyse des articles de
 
 ```
 fake-news-detection/
-├── app/                    # Interface web Streamlit
-├── chroma/                # Client ChromaDB et gestion
-├── data_handler/          # Utilitaire de chargement et nettoyage des données
-├── function_chunk/        # Fonctionnalité de découpage de texte
+├── app/                  # Interface web Streamlit
+├── chroma/               # Client ChromaDB et gestion
+├── data_handler/         # Utilitaire de chargement et nettoyage des données
+├── function_chunk/       # Fonctionnalité de découpage de texte
 ├── pipelines/            # Pipeline principal de traitement des données
 ├── prompt/               # Système RAG et construction de prompts
 └── tests/                # Suites de tests
