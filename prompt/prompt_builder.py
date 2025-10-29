@@ -11,17 +11,6 @@ class PromptBuilder():
         self.article_text = article_text
         self.model_embedding = model_embedding
         self.model_llm = model_llm
-        self.data = None
-
-    def generate_embedding(self):
-        # Génére l'embedding du texte à vérifier
-        emb_response = ollama.embed(
-            model=self.model_embedding,
-            input=self.article_text
-        )
-        self.data = emb_response["embeddings"]
-
-        return self.data 
     
     def build_context_for_prompt(self, search_results):
         # Rechercher les articles les plus similaires dans la base vectorielle
