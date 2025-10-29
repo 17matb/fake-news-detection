@@ -95,9 +95,7 @@ class Pipeline:
 
     def process_user_input(self):
         user_input: str = input("Please provide the body of a news article: ")
-        print(user_input)
         clean_user_input = text_cleaning(user_input)
-        print(clean_user_input)
         self.llm_response = RAGSystem().analyze_article(clean_user_input)
         print(self.llm_response)
         return self
