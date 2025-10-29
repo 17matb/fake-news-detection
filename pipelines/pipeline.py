@@ -98,6 +98,6 @@ class Pipeline:
         print(user_input)
         clean_user_input = text_cleaning(user_input)
         print(clean_user_input)
-        response = RAGSystem().analyze_article(clean_user_input)
-        print(response)
+        self.llm_response = RAGSystem().analyze_article(clean_user_input)
+        print(self.llm_response)
         return self
