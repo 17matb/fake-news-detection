@@ -99,6 +99,6 @@ class Pipeline:
         rag_system = RAGSystem()
         self.llm_response = rag_system.analyze_article(clean_user_input)
         print(self.llm_response)
-        self.evaluation = rag_system.evaluation_rag(self.llm_response)
+        self.evaluation = rag_system.evaluation_rag()
         print(f"\nscore: {self.evaluation} %")
         return self

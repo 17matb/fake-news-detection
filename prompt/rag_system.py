@@ -16,9 +16,13 @@ class RAGSystem:
         self.model_llm = model_lm
 
     def analyze_article(self, article_text):
+        """
+        Analyse un article et prédit son label (True/Fake) à l'aide du modèle RAG.
+        Nettoie également la réponse du LLM pour éviter les doublons.
+        """
         try:
             # Recherche des articles similaires
-            self.search_results = self.chroma_manager.query(article_text, n_results=3)
+            self.search_results = self.chroma_manager.query(article_text, n_results=10)
 
             # Construction du prompt
             prompt_builder = PromptBuilder(
@@ -34,77 +38,82 @@ class RAGSystem:
             prompt = prompt_builder.build_prompt(context)
 
             # Prédiction
-            response = prompt_builder.predict_label(prompt)
+            self.response = prompt_builder.predict_label(prompt)
 
-            return response
+            return self.response
 
         except Exception as e:
             return f"Erreur lors de l'analyse: {e}"
 
-    def evaluation_rag(self, response):
-        # search_results est le retour de self.chroma_manager.query(article_text, n_results=3) / def analyse_aticle
-        if not self.search_results:
-            raise Exception("× `self.search_results` est introuvable")
-        retrieved_chunks = []
+    def evaluation_rag(self):
+        """
+        Évaluation améliorée qui utilise mieux les labels des chunks
+        """
+        if not hasattr(self, 'response'):
+            raise Exception("× `self.response` est introuvable")
 
-        for doc, meta, dist in zip(
-            self.search_results["documents"][0],
-            self.search_results["metadatas"][0],
-            self.search_results["distances"][0],
-        ):
-            retrieved_chunks.append(
-                {
-                    "text": doc,
-                    "subject": meta["subject"],
-                    "date": meta["date"],
-                    "label": meta["label"],  # vrai label
-                    "distance": dist,
+        # Extraction du label
+        llm_text = self.response
+        predicted_label = "Incertain"
+        
+        patterns = [
+            r"Label\s*:\s*[\"']?([Tt]rue|[Ff]ake|[Ff]alse)[\"']?",
+            r"^[\"']?([Tt]rue|[Ff]ake|[Ff]alse)[\"']?\s*$",
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, llm_text, re.IGNORECASE | re.MULTILINE)
+            if match:
+                raw_label = match.group(1).strip('"\'')
+                if raw_label.lower() in ["true"]:
+                    predicted_label = "True"
+                    break
+                elif raw_label.lower() in ["fake", "false"]:
+                    predicted_label = "Fake" 
+                    break
+
+        # Extraction de la justification
+        justification = "Analyse basée sur la comparaison avec la base de données."
+        justification_patterns = [
+            r"Justification\s*:\s*(.+?)(?:\n\n|\n[A-Z]|$)",
+            r"Reasoning\s*:\s*(.+?)(?:\n\n|\n[A-Z]|$)",
+            r"Identify which criteria match[^:]*:\s*(.+)",
+        ]
+        
+        for pattern in justification_patterns:
+            match = re.search(pattern, llm_text, re.IGNORECASE | re.DOTALL)
+            if match:
+                justification = match.group(1).strip()
+                justification = re.sub(r'\s+', ' ', justification)
+                break
+
+        # Calcul de confiance
+        if hasattr(self, 'search_results') and self.search_results:
+            true_labels = [meta['label'] for meta in self.search_results["metadatas"][0]]
+            
+            if true_labels:
+                # Compter les matches avec le label prédit
+                matches = sum(1 for label in true_labels if label.lower() == predicted_label.lower())
+                base_confidence = (matches / len(true_labels)) * 100
+                
+                # Ajustement basé sur la cohérence du LLM
+                llm_confidence_indicators = {
+                    "True": ["official", "verified", "factual", "credible"],
+                    "Fake": ["sensational", "conspiracy", "unverified", "extraordinary"]
                 }
-            )
-
-        # Convertir en DataFrame pour plus de clarté
-        df_chunks = pd.DataFrame(retrieved_chunks)
-        pass
-
-        # Réponse du LLM
-        llm_text = response
-
-        # Extraire le Label entre les ```plaintext``` ou après "Label :"
-        match = re.search(r"Label\s*:\s*(True|Fake)", llm_text, re.IGNORECASE)
-        if match:
-            predicted_label = match.group(
-                1
-            )  # group(1) renvoie juste la partie du groupe capturant ("True").
+                
+                # Vérifier si la justification du LLM est cohérente
+                justification_lower = justification.lower()
+                coherence_bonus = 0
+                
+                for indicator in llm_confidence_indicators.get(predicted_label, []):
+                    if indicator in justification_lower:
+                        coherence_bonus += 10
+                
+                confidence = min(100, base_confidence + coherence_bonus)
+            else:
+                confidence = 50.0
         else:
-            predicted_label = None
+            confidence = 50.0
 
-        # Labels réels des chunks récupérés
-        true_labels = df_chunks["label"].tolist()
-
-        # Prend la majorité des labels
-        # Counter est une classe du module standard Python collections
-        majority_label = Counter(true_labels).most_common(1)[0][
-            0
-        ]  # Counter sert à compter les occurrences de chaque élément dans une liste.
-        # most_common extrait le premier élément du tuple,
-
-        # Comparaison du label prédit avec les labels des chunks
-        matches = sum(
-            1 for label in true_labels if label.lower() == predicted_label.lower()
-        )
-        percentage = (matches / len(true_labels)) * 100
-
-        # -------------------- A supprimer apres test fonction --------------------------
-
-        # accuracy = int(predicted_label.lower() == majority_label.lower())
-
-        # print(f"Predicted label: {predicted_label}")
-        # print(f"Labels des chunks: {true_labels}")
-        # print(f"Correspondances: {matches}/{len(true_labels)} ({percentage:.2f}%)")
-
-        # # Affichage des comparaisons
-        # print(f"Predicted label: {predicted_label}")
-        # print(f"Majority label of retrieved chunks: {majority_label}")
-        # print(f"Test passed? {accuracy == 1}")
-
-        return percentage
+        return predicted_label, round(confidence, 2), justification
