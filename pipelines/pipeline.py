@@ -1,4 +1,7 @@
+import re
+
 import pandas as pd
+import questionary
 from chroma.chroma_manager import ChromaManager
 from data_handler.data_handler import DataHandler
 from data_handler.text_cleaning import text_cleaning
@@ -103,3 +106,36 @@ class Pipeline:
 
         print(f"\nscore: {self.evaluation} %")
         return self
+
+    def ask_user(self):
+        is_first_time = True
+        wish_to_continue = True
+        while wish_to_continue:
+            selection = questionary.select(
+                "What do you want to do?"
+                if is_first_time
+                else "And now, what do you want to do?",
+                [
+                    "EXPLORATION -> Quickly load data from CSV files to take a look at the data exploration",
+                    "INSERTION -> Load data from CSV files, clean it, process it and insert it into a chromaDB (might take a while)",
+                    "RUN -> Provide the body of a news article and check whether or not it is reliable",
+                    "EXIT -> Exit this program",
+                ],
+            ).ask()
+            is_first_time = False
+            regex_match = re.search(r"^([A-Z]+)\s->", str(selection))
+            if regex_match:
+                first_selection = regex_match.group(1)
+            match first_selection:
+                case "EXPLORATION":
+                    self.data_exploration()
+                case "INSERTION":
+                    self.chroma_insertion()
+                case "RUN":
+                    self.process_user_input()
+                case "EXIT":
+                    print("Program exited")
+                    return
+            wish_to_continue = questionary.confirm(
+                "Would you like to do something else?"
+            ).ask()
