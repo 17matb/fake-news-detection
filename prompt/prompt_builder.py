@@ -1,17 +1,19 @@
+import os
+
 import ollama
 
-class PromptBuilder():
 
+class PromptBuilder:
     """
-        Prend un texte d'article et retourne une prédiction True/Fake
-        en utilisant RAG (Recherche + LLM via Ollama).
+    Prend un texte d'article et retourne une prédiction True/Fake
+    en utilisant RAG (Recherche + LLM via Ollama).
     """
 
     def __init__(self, article_text, model_embedding, model_llm):
         self.article_text = article_text
         self.model_embedding = model_embedding
         self.model_llm = model_llm
-    
+
     def build_context_for_prompt(self, search_results):
         # Rechercher les articles les plus similaires dans la base vectorielle
         # Prend le retour de la fonction query_collection qui a était vectorisé au préalable
@@ -21,12 +23,14 @@ class PromptBuilder():
         similar_meta = search_results["metadatas"][0]
 
         # Construire le contexte à donner au LLM
-        context = "\n\n".join([
-            f"- Sujet : {meta['subject']}\n  Date : {meta['date']}\n  Label : {meta['label']}\n  Texte : {doc}..."
-            for doc, meta in zip(similar_docs, similar_meta)
-        ])
+        context = "\n\n".join(
+            [
+                f"- Sujet : {meta['subject']}\n  Date : {meta['date']}\n  Label : {meta['label']}\n  Texte : {doc}..."
+                for doc, meta in zip(similar_docs, similar_meta)
+            ]
+        )
         return context
-    
+
     def build_prompt(self, context):
         # Construire le prompt complet pour le LLM
         prompt = f"""
@@ -52,13 +56,12 @@ class PromptBuilder():
         Justification: in 2 sentences maximum, based on the similarities or tone of the article.
         """
         return prompt
-    
+
     def predict_label(self, prompt):
         # Appele le modèle de langage pour obtenir la classification
-        response = ollama.generate(
-            model=self.model_llm,
-            prompt=prompt
-        )
+        host = os.getenv("OLLAMA_HOST", "http://ollama:11434")
+        client = ollama.Client(host=host)
+        response = client.generate(model=self.model_llm, prompt=prompt)
 
         # Retourne la réponse
         return response["response"]
